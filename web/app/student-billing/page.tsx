@@ -32,6 +32,7 @@ type BillRecord = {
     id: string;
     dining_type: string;
     original_amount: number;
+    discount_amount: number;
     created_at: string;
 };
 
@@ -237,7 +238,17 @@ export default function StudentBillingPage() {
                                                         <span className="text-sm font-medium text-gray-900">{item.dining_type === "lunch" ? "午饭" : "晚饭"}</span>
                                                         <span className="text-xs text-gray-400">{item.created_at}</span>
                                                     </div>
-                                                    <span className="text-sm font-mono font-semibold text-gray-900">¥{item.original_amount.toLocaleString()}</span>
+                                                    <div className="text-right">
+                                                        {item.discount_amount > 0 ? (
+                                                            <>
+                                                                <span className="text-xs text-gray-400 line-through font-mono">¥{item.original_amount.toLocaleString()}</span>
+                                                                <br />
+                                                                <span className="text-sm font-mono font-semibold text-orange-600">¥{(item.original_amount - item.discount_amount).toLocaleString()}</span>
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-sm font-mono font-semibold text-gray-900">¥{item.original_amount.toLocaleString()}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>

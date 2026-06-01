@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Gift, Moon, Utensils } from "lucide-react";
+import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import MentorSidebar from "@/components/mentor-sidebar";
 import RecentBillings from "@/components/recent-billings";
@@ -20,6 +21,13 @@ export default function MentorDateDetailPage() {
     const [gender, setGender] = useState("");
     const [dates, setDates] = useState<DateItem[]>([]);
     const [mealType, setMealType] = useState<"lunch" | "dinner">("lunch");
+    const [eaterCount, setEaterCount] = useState(0);
+    const [pushCount, setPushCount] = useState(0);
+    const [pushing, setPushing] = useState(false);
+
+    const perPersonDiscount = eaterCount > 0
+        ? (LUNCH_DISCOUNT / eaterCount).toFixed(2)
+        : "0.00";
 
     useEffect(() => {
         api.get("/api/auth/me").then((res) => {
@@ -31,32 +39,53 @@ export default function MentorDateDetailPage() {
         }).catch(() => {});
     }, []);
 
-    const eaterCount = 2;
-    const perPersonDiscount = eaterCount > 0
-        ? (LUNCH_DISCOUNT / eaterCount).toFixed(2)
-        : "0.00";
+    useEffect(() => {
+        if (!date) return;
+        api.get("/api/billing/recent", {
+            params: { page: 0, page_size: 100, date, dining_type: mealType },
+        }).then((res) => {
+            setEaterCount(res.data.total);
+        }).catch(() => {});
+    }, [date, mealType, pushCount]);
 
-    const handlePush = () => {
-        confetti({
-            particleCount: 120,
-            spread: 80,
-            origin: { y: 0.6 },
-            colors: ["#f97316", "#fbbf24", "#ec4899", "#a855f7", "#06b6d4"],
-        });
-        setTimeout(() => {
-            confetti({
-                particleCount: 60,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
+    const handlePush = async () => {
+        setPushing(true);
+        try {
+            const res = await api.post("/api/billing/push_coupon", {
+                date,
+                dining_type: mealType,
             });
+            const { eater_count, per_person_discount } = res.data;
+            toast.success(`发放成功！${eater_count} 人，每人优惠 ¥${per_person_discount}`);
+            setPushCount((c) => c + 1);
+            setEaterCount(eater_count);
+
             confetti({
-                particleCount: 60,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
+                particleCount: 120,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ["#f97316", "#fbbf24", "#ec4899", "#a855f7", "#06b6d4"],
             });
-        }, 300);
+            setTimeout(() => {
+                confetti({
+                    particleCount: 60,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                });
+                confetti({
+                    particleCount: 60,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                });
+            }, 300);
+        } catch (err: unknown) {
+            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+            toast.error(detail || "发放失败");
+        } finally {
+            setPushing(false);
+        }
     };
 
     return (
@@ -68,7 +97,7 @@ export default function MentorDateDetailPage() {
 
                 <div className="flex flex-col gap-6 flex-1 min-h-0">
                     <div className="flex-shrink-0">
-                        <RecentBillings date={date} />
+                        <RecentBillings date={date} key={pushCount} />
                     </div>
 
                     <div className="bg-white border border-gray-200 shadow-sm flex-shrink-0">
@@ -105,7 +134,7 @@ export default function MentorDateDetailPage() {
 
                             <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-400 uppercase tracking-wider">吃饭人数</span>
+                                    <span className="text-xs text-gray-400 uppercase tracking-wider">{mealType === "lunch" ? "吃午饭人数" : "吃晚饭人数"}</span>
                                     <span className="text-base font-semibold text-gray-900 font-mono">{eaterCount}</span>
                                 </div>
                                 <div className="w-px h-4 bg-gray-200" />
@@ -129,14 +158,15 @@ export default function MentorDateDetailPage() {
                         </p>
                         <button
                             onClick={handlePush}
-                            className={`w-full py-4 text-white text-base font-bold rounded-lg hover:scale-[1.01] active:scale-[0.98] transition-all duration-300 hover:animate-pulse flex items-center justify-center gap-2.5 shadow-lg ${
+                            disabled={pushing}
+                            className={`w-full py-4 text-white text-base font-bold rounded-lg hover:scale-[1.01] active:scale-[0.98] transition-all duration-300 hover:animate-pulse flex items-center justify-center gap-2.5 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:animate-none ${
                                 mealType === "lunch"
                                     ? "bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 shadow-orange-500/25 hover:shadow-orange-500/40"
                                     : "bg-gradient-to-r from-violet-600 via-indigo-500 to-blue-500 shadow-indigo-500/25 hover:shadow-indigo-500/40"
                             }`}
                         >
                             <Gift size={20} />
-                            Coupon Push!
+                            {pushing ? "发放中..." : "Coupon Push!"}
                         </button>
                     </div>
                 </div>
@@ -144,4 +174,3 @@ export default function MentorDateDetailPage() {
         </div>
     );
 }
-

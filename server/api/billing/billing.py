@@ -1,14 +1,35 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.api.auth.dependencies import get_current_user
-from server.api.schema.billing import BillAddRequest, BillEditRequest, BillResponse, RecentBillingItem, RecentBillingResponse
+from server.api.schema.billing import (
+    BillAddRequest,
+    BillEditRequest,
+    BillResponse,
+    PushCouponRequest,
+    RecentBillingItem,
+    RecentBillingResponse,
+)
 from server.store.database import get_db
 from server.store.schema.bill import Bill
 from server.store.schema.user import User
 
 router = APIRouter(prefix="/api/billing", tags=["账单"])
+
+
+def _bill_response(bill: Bill) -> BillResponse:
+    return BillResponse(
+        id=bill.id,
+        user_id=bill.user_id,
+        original_amount=bill.original_amount,
+        discount_amount=bill.discount_amount,
+        dining_type=bill.dining_type,
+        created_at=str(bill.created_at),
+        updated_at=str(bill.updated_at),
+    )
 
 
 @router.post("/add", response_model=BillResponse)
@@ -25,15 +46,7 @@ async def add_bill(
     db.add(bill)
     await db.commit()
     await db.refresh(bill)
-
-    return BillResponse(
-        id=bill.id,
-        user_id=bill.user_id,
-        original_amount=bill.original_amount,
-        dining_type=bill.dining_type,
-        created_at=str(bill.created_at),
-        updated_at=str(bill.updated_at),
-    )
+    return _bill_response(bill)
 
 
 @router.get("/recent", response_model=RecentBillingResponse)
@@ -41,6 +54,7 @@ async def recent_billings(
     page: int = 0,
     page_size: int = 10,
     date: str = "",
+    dining_type: str = "",
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -53,10 +67,12 @@ async def recent_billings(
     conditions = [User.user_identity == "student"]
 
     if date:
-        from datetime import datetime
         month, day = map(int, date.split("."))
         target = datetime.now().replace(month=month, day=day).strftime("%Y-%m-%d")
         conditions.append(func.date(Bill.created_at) == target)
+
+    if dining_type:
+        conditions.append(Bill.dining_type == dining_type)
 
     base = (
         select(Bill)
@@ -75,6 +91,7 @@ async def recent_billings(
             User.username.label("student_name"),
             Bill.dining_type,
             Bill.original_amount,
+            Bill.discount_amount,
             Bill.created_at,
         )
         .join(User, Bill.user_id == User.id)
@@ -94,7 +111,8 @@ async def recent_billings(
                 student_name=r[1],
                 dining_type=r[2],
                 original_amount=r[3],
-                created_at=r[4].strftime("%Y-%m-%d %H:%M:%S"),
+                discount_amount=r[4],
+                created_at=r[5].strftime("%Y-%m-%d %H:%M:%S"),
             )
             for r in rows
         ],
@@ -112,17 +130,7 @@ async def list_bills(
         .order_by(desc(Bill.created_at))
     )
     bills = result.scalars().all()
-    return [
-        BillResponse(
-            id=b.id,
-            user_id=b.user_id,
-            dining_type=b.dining_type,
-            original_amount=b.original_amount,
-            created_at=str(b.created_at),
-            updated_at=str(b.updated_at),
-        )
-        for b in bills
-    ]
+    return [_bill_response(b) for b in bills]
 
 
 @router.get("/dates")
@@ -193,11 +201,52 @@ async def edit_bill(
     await db.commit()
     await db.refresh(bill)
 
-    return BillResponse(
-        id=bill.id,
-        user_id=bill.user_id,
-        original_amount=bill.original_amount,
-        dining_type=bill.dining_type,
-        created_at=str(bill.created_at),
-        updated_at=str(bill.updated_at),
+    return _bill_response(bill)
+
+
+@router.post("/push_coupon")
+async def push_coupon(
+    body: PushCouponRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if current_user.user_identity != "mentor":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="仅管理员可操作",
+        )
+
+    month, day = map(int, body.date.split("."))
+    target = datetime.now().replace(month=month, day=day).strftime("%Y-%m-%d")
+
+    result = await db.execute(
+        select(Bill)
+        .join(User, Bill.user_id == User.id)
+        .where(
+            User.user_identity == "student",
+            func.date(Bill.created_at) == target,
+            Bill.dining_type == body.dining_type,
+        )
     )
+    bills = result.scalars().all()
+
+    if not bills:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="当天该餐次暂无账单",
+        )
+
+    eater_count = len(bills)
+    per_person = round(16 / eater_count, 2)
+
+    for b in bills:
+        b.discount_amount = per_person
+
+    await db.commit()
+
+    return {
+        "detail": "发放成功",
+        "eater_count": eater_count,
+        "per_person_discount": per_person,
+        "dining_type": body.dining_type,
+    }

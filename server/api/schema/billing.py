@@ -16,6 +16,7 @@ class BillResponse(BaseModel):
     user_id: str
     dining_type: str
     original_amount: float
+    discount_amount: float
     created_at: str
     updated_at: str
 
@@ -25,6 +26,7 @@ class RecentBillingItem(BaseModel):
     student_name: str
     dining_type: str
     original_amount: float
+    discount_amount: float
     created_at: str
 
 
@@ -33,3 +35,8 @@ class RecentBillingResponse(BaseModel):
     page: int
     page_size: int
     items: list[RecentBillingItem]
+
+
+class PushCouponRequest(BaseModel):
+    date: str
+    dining_type: str = Field(default="lunch", pattern="^(lunch|dinner)$")
