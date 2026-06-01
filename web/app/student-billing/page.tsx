@@ -118,6 +118,55 @@ export default function StudentBillingPage() {
         }
     };
 
+    const handleExport = () => {
+        if (billList.length === 0) {
+            toast.error("暂无数据可导出");
+            return;
+        }
+        const weeks = new Map<string, BillRecord[]>();
+        for (const b of billList) {
+            const d = new Date(b.created_at.replace(" ", "T"));
+            const day = d.getDay();
+            const diff = day === 0 ? -6 : 1 - day;
+            const monday = new Date(d);
+            monday.setDate(monday.getDate() + diff);
+            const key = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, "0")}-${String(monday.getDate()).padStart(2, "0")}`;
+            if (!weeks.has(key)) weeks.set(key, []);
+            weeks.get(key)!.push(b);
+        }
+
+        const weekdayLabels = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+        const sortedWeeks = Array.from(weeks.entries()).sort(([a], [b]) => a.localeCompare(b));
+        const header = "餐次,原价,优惠,实付,时间";
+        const sections: string[] = [];
+
+        for (const [key, weekItems] of sortedWeeks) {
+            const [y, m, d] = key.split("-").map(Number);
+            const monday = new Date(y, m - 1, d);
+            const sunday = new Date(monday);
+            sunday.setDate(sunday.getDate() + 6);
+            const wkLabel = `${monday.getMonth() + 1}月${monday.getDate()}日（${weekdayLabels[monday.getDay()]}） --- ${sunday.getMonth() + 1}月${sunday.getDate()}日（${weekdayLabels[sunday.getDay()]}）`;
+            sections.push(wkLabel);
+            sections.push(header);
+            for (const b of weekItems) {
+                const meal = b.dining_type === "lunch" ? "午饭" : "晚饭";
+                const final = (b.original_amount - b.discount_amount).toFixed(2);
+                sections.push(`${meal},${b.original_amount},${b.discount_amount},${final},${b.created_at}`);
+            }
+            sections.push("");
+        }
+
+        const csv = "\uFEFF" + sections.join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `billing_${username || "me"}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("导出成功");
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 py-8">
             <div className="w-full max-w-md max-h-[calc(100vh-128px)] flex-1 flex flex-col">
@@ -218,7 +267,10 @@ export default function StudentBillingPage() {
                             <div className="bg-white border border-gray-200 shadow-sm p-6 w-full space-y-4 mb-82">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-sm font-semibold text-gray-900">历史账单</h3>
-                                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                                    <button
+                                        onClick={handleExport}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                                    >
                                         <Download size={14} strokeWidth={2} /> 导出
                                     </button>
                                 </div>

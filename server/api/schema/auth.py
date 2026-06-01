@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -50,6 +52,13 @@ class StudentItem(BaseModel):
     name: str
     gender: str
     user_identity: str
+
+
+class UpdateStudentRequest(BaseModel):
+    student_id: str
+    username: Optional[str] = None
+    gender: Optional[str] = Field(default=None, pattern="^(male|female)$")
+    password: Optional[str] = None
 
 
 class StudentListResponse(BaseModel):

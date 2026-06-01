@@ -47,9 +47,9 @@ export default function MentorSidebar({ username, gender, dates }: MentorSidebar
                         每日
                     </h3>
                 </div>
-                <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 mb-2 rounded-md border border-dashed border-gray-300 text-sm text-gray-500 hover:border-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors">
+                {/* <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 mb-2 rounded-md border border-dashed border-gray-300 text-sm text-gray-500 hover:border-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors">
                     <Plus size={14} strokeWidth={2} />
-                </button>
+                </button> */}
                 <ul className="space-y-0.5">
                     {dates.map((date) => {
                         const isActive = currentDate === date.value;

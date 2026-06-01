@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Moon, Utensils } from "lucide-react";
+import { ChevronLeft, ChevronRight, Moon, Utensils, Download } from "lucide-react";
 import api from "@/utils/api";
 
 const PAGE_SIZE = 8;
@@ -15,7 +15,7 @@ type BillingItem = {
   created_at: string;
 };
 
-export default function RecentBillings({ date }: { date?: string }) {
+export default function RecentBillings({ date, onExport }: { date?: string; onExport?: () => void }) {
   const [billings, setBillings] = useState<BillingItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -60,6 +60,15 @@ export default function RecentBillings({ date }: { date?: string }) {
             </button>
           </div>
         </div>
+        {onExport && (
+          <button
+            onClick={onExport}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <Download size={14} />
+            导出 CSV
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-[1fr_80px_170px_100px] px-6 py-2.5 bg-gray-50 border-b border-gray-100">

@@ -42,11 +42,41 @@ export default function MentorDateDetailPage() {
     useEffect(() => {
         if (!date) return;
         api.get("/api/billing/recent", {
-            params: { page: 0, page_size: 100, date, dining_type: mealType },
+            params: { page: 0, page_size: 1000, date, dining_type: mealType },
         }).then((res) => {
             setEaterCount(res.data.total);
         }).catch(() => {});
     }, [date, mealType, pushCount]);
+
+    const handleExport = async () => {
+        try {
+            const res = await api.get("/api/billing/recent", {
+                params: { page: 0, page_size: 1000, date },
+            });
+            const items = res.data.items as { student_name: string; dining_type: string; original_amount: number; discount_amount: number; created_at: string }[];
+            if (items.length === 0) {
+                toast.error("暂无数据可导出");
+                return;
+            }
+            const header = "学生,餐次,原价,优惠,实付,日期";
+            const rows = items.map((b) => {
+                const meal = b.dining_type === "lunch" ? "午饭" : "晚饭";
+                const final = (b.original_amount - b.discount_amount).toFixed(2);
+                return `${b.student_name},${meal},${b.original_amount},${b.discount_amount},${final},${b.created_at}`;
+            });
+            const csv = "\uFEFF" + header + "\n" + rows.join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `billing_${date}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast.success("导出成功");
+        } catch {
+            toast.error("导出失败");
+        }
+    };
 
     const handlePush = async () => {
         setPushing(true);
@@ -97,7 +127,7 @@ export default function MentorDateDetailPage() {
 
                 <div className="flex flex-col gap-6 flex-1 min-h-0">
                     <div className="flex-shrink-0">
-                        <RecentBillings date={date} key={pushCount} />
+                        <RecentBillings date={date} key={pushCount} onExport={handleExport} />
                     </div>
 
                     <div className="bg-white border border-gray-200 shadow-sm flex-shrink-0">

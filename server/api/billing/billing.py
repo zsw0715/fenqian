@@ -150,6 +150,43 @@ async def bill_dates(
     ]
 
 
+@router.get("/export_all")
+async def export_all(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if current_user.user_identity != "mentor":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="仅管理员可操作")
+
+    result = await db.execute(
+        select(
+            Bill.id,
+            User.username.label("student_name"),
+            Bill.dining_type,
+            Bill.original_amount,
+            Bill.discount_amount,
+            Bill.created_at,
+        )
+        .join(User, Bill.user_id == User.id)
+        .where(User.user_identity == "student")
+        .order_by(Bill.created_at)
+    )
+    rows = result.all()
+    return {
+        "items": [
+            {
+                "id": r[0],
+                "student_name": r[1],
+                "dining_type": r[2],
+                "original_amount": r[3],
+                "discount_amount": r[4],
+                "created_at": r[5].strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            for r in rows
+        ]
+    }
+
+
 @router.delete("/delete")
 async def delete_bill(
     bill_id: str,
