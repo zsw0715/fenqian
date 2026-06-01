@@ -4,7 +4,7 @@ import MentorSidebar from "@/components/mentor-sidebar";
 import StudentList from "@/components/student-list";
 import RecentBillings from "@/components/recent-billings";
 
-export default function MentorDashboardPage() {
+export default function DashboardPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <MentorSidebar />

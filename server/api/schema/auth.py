@@ -10,6 +10,7 @@ class LoginResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+    user_identity: str
 
 
 class RegisterRequest(BaseModel):
