@@ -18,3 +18,18 @@ class BillResponse(BaseModel):
     original_amount: float
     created_at: str
     updated_at: str
+
+
+class RecentBillingItem(BaseModel):
+    id: str
+    student_name: str
+    dining_type: str
+    original_amount: float
+    created_at: str
+
+
+class RecentBillingResponse(BaseModel):
+    total: int
+    page: int
+    page_size: int
+    items: list[RecentBillingItem]

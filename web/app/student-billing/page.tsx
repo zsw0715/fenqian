@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { User, Download } from "lucide-react";
+import { Download, Mars, Venus } from "lucide-react";
 import api from "@/utils/api";
 
 const tabs = ["记账", "等付款", "历史记录"];
@@ -28,26 +28,31 @@ const pendingPayments = [
     { id: 18, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
 ];
 
-const historyRecords = [
-    { id: 1, title: "Python 进阶课程", date: "2026-05-28", tag: "已付款", amount: 1200 },
-    { id: 2, title: "React 项目辅导", date: "2026-05-27", tag: "已付款", amount: 800 },
-    { id: 3, title: "算法刷题陪练", date: "2026-05-26", tag: "已付款", amount: 500 },
-    { id: 4, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 5, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 6, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 7, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 8, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 9, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 10, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 11, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 12, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 13, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 14, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 15, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 16, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 17, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 18, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-];
+type BillRecord = {
+    id: string;
+    dining_type: string;
+    original_amount: number;
+    created_at: string;
+};
+
+function formatDateLabel(dateStr: string): string {
+    const d = new Date(dateStr.replace(" ", "T"));
+    return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+function groupByDate(bills: BillRecord[]): { label: string; items: BillRecord[] }[] {
+    const groups: { label: string; items: BillRecord[] }[] = [];
+    for (const b of bills) {
+        const label = formatDateLabel(b.created_at);
+        const last = groups[groups.length - 1];
+        if (last && last.label === label) {
+            last.items.push(b);
+        } else {
+            groups.push({ label, items: [b] });
+        }
+    }
+    return groups;
+}
 
 function BillingItem({ title, date, tag, amount, isLast }: { title: string; date: string; tag: string; amount: number; isLast?: boolean; }) {
     return (
@@ -66,12 +71,30 @@ export default function StudentBillingPage() {
     const [activeTab, setActiveTab] = useState(0);
     const [amount, setAmount] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [username, setUsername] = useState("");
+    const [gender, setGender] = useState("");
+    const [billList, setBillList] = useState<BillRecord[]>([]);
     const today = new Date().toLocaleDateString("zh-CN", {
         year: "numeric",
         month: "long",
         day: "numeric",
         weekday: "long",
     });
+
+    const fetchBills = async () => {
+        try {
+            const res = await api.get("/api/billing/list_by_username");
+            setBillList(res.data);
+        } catch {}
+    };
+
+    useEffect(() => {
+        api.get("/api/auth/me").then((res) => {
+            setUsername(res.data.username);
+            setGender(res.data.gender);
+        }).catch(() => {});
+        fetchBills();
+    }, []);
 
     const handleSubmit = async () => {
         if (!amount || Number(amount) <= 0) {
@@ -86,6 +109,7 @@ export default function StudentBillingPage() {
             });
             toast.success("提交成功");
             setAmount("");
+            fetchBills();
         } catch {
             toast.error("提交失败，请重试");
         } finally {
@@ -99,12 +123,18 @@ export default function StudentBillingPage() {
 
                 {/* Top: User Block */}
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center">
-                        <User size={24} className="text-gray-500" />
+                    <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center">
+                        <span className="text-white text-xl font-semibold">{username ? username.charAt(0) : ""}</span>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                        <span className="text-base font-semibold text-gray-900">张三</span>
-                        <span className="text-sm text-gray-500">男</span>
+                        <span className="text-base font-semibold text-gray-900">{username || "加载中..."}</span>
+                        <span className="text-sm text-gray-500 flex items-center gap-1">
+                            {gender === "male" ? (
+                                <><Mars size={14} className="text-blue-500" /> 男</>
+                            ) : gender === "female" ? (
+                                <><Venus size={14} className="text-pink-500" /> 女</>
+                            ) : null}
+                        </span>
                         <span className="text-xs text-gray-400">{today}</span>
                     </div>
                 </div>
@@ -191,16 +221,28 @@ export default function StudentBillingPage() {
                                         <Download size={14} strokeWidth={2} /> 导出
                                     </button>
                                 </div>
-                                {historyRecords.map((item, index) => (
-                                    <BillingItem
-                                        key={item.id}
-                                        title={item.title}
-                                        date={item.date}
-                                        tag={item.tag}
-                                        amount={item.amount}
-                                        isLast={index === historyRecords.length - 1}
-                                    />
-                                ))}
+                                {billList.length === 0 ? (
+                                    <p className="text-sm text-gray-400 text-center py-6">暂无账单记录</p>
+                                ) : (
+                                    groupByDate(billList).map((group) => (
+                                        <div key={group.label}>
+                                            <div className="flex items-center gap-3 py-2">
+                                                <div className="flex-1 h-px bg-gray-100" />
+                                                <span className="text-xs text-gray-400 whitespace-nowrap">{group.label}</span>
+                                                <div className="flex-1 h-px bg-gray-100" />
+                                            </div>
+                                            {group.items.map((item, index) => (
+                                                <div key={item.id} className={`flex items-center justify-between py-3 ${index === group.items.length - 1 ? "" : "border-b border-gray-100"}`}>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="text-sm font-medium text-gray-900">{item.dining_type === "lunch" ? "午饭" : "晚饭"}</span>
+                                                        <span className="text-xs text-gray-400">{item.created_at}</span>
+                                                    </div>
+                                                    <span className="text-sm font-mono font-semibold text-gray-900">¥{item.original_amount.toLocaleString()}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
                     </div>
