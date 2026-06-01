@@ -5,13 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { Home, LayoutDashboard, Plus } from "lucide-react";
 
 const dates = [
-  { label: "5.28/2026", href: "/dashboard?date=5.28" },
-  { label: "5.27/2026", href: "/dashboard?date=5.27" },
-  { label: "5.26/2026", href: "/dashboard?date=5.26" },
-  { label: "5.25/2026", href: "/dashboard?date=5.25" },
-  { label: "5.24/2026", href: "/dashboard?date=5.24" },
-  { label: "5.23/2026", href: "/dashboard?date=5.23" },
-  { label: "5.22/2026", href: "/dashboard?date=5.22" },
+  { label: "5.28/2026", href: "/mentor-dashboard?date=5.28" },
+  { label: "5.27/2026", href: "/mentor-dashboard?date=5.27" },
+  { label: "5.26/2026", href: "/mentor-dashboard?date=5.26" },
+  { label: "5.25/2026", href: "/mentor-dashboard?date=5.25" },
+  { label: "5.24/2026", href: "/mentor-dashboard?date=5.24" },
+  { label: "5.23/2026", href: "/mentor-dashboard?date=5.23" },
+  { label: "5.22/2026", href: "/mentor-dashboard?date=5.22" },
 ];
 
 export default function MentorSidebar() {
@@ -30,7 +30,7 @@ export default function MentorSidebar() {
           Home
         </Link>
         <Link
-          href="/dashboard"
+          href="/mentor-dashboard"
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-900 bg-gray-100 transition-colors"
         >
           <LayoutDashboard size={16} strokeWidth={2} />
