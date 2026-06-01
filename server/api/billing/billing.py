@@ -40,6 +40,7 @@ async def add_bill(
 async def recent_billings(
     page: int = 0,
     page_size: int = 10,
+    date: str = "",
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -49,10 +50,18 @@ async def recent_billings(
             detail="仅管理员可查看",
         )
 
+    conditions = [User.user_identity == "student"]
+
+    if date:
+        from datetime import datetime
+        month, day = map(int, date.split("."))
+        target = datetime.now().replace(month=month, day=day).strftime("%Y-%m-%d")
+        conditions.append(func.date(Bill.created_at) == target)
+
     base = (
         select(Bill)
         .join(User, Bill.user_id == User.id)
-        .where(User.user_identity == "student")
+        .where(*conditions)
     )
 
     total_result = await db.execute(
@@ -69,7 +78,7 @@ async def recent_billings(
             Bill.created_at,
         )
         .join(User, Bill.user_id == User.id)
-        .where(User.user_identity == "student")
+        .where(*conditions)
         .order_by(desc(Bill.created_at))
         .offset(page * page_size)
         .limit(page_size)

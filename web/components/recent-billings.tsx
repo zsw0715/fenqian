@@ -14,25 +14,25 @@ type BillingItem = {
   created_at: string;
 };
 
-export default function RecentBillings() {
+export default function RecentBillings({ date }: { date?: string }) {
   const [billings, setBillings] = useState<BillingItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const fetchBillings = useCallback(async (p: number) => {
+  const fetchBillings = useCallback(async (p: number, d?: string) => {
     try {
-      const res = await api.get("/api/billing/recent", {
-        params: { page: p, page_size: PAGE_SIZE },
-      });
+      const params: Record<string, string | number> = { page: p, page_size: PAGE_SIZE };
+      if (d) params.date = d;
+      const res = await api.get("/api/billing/recent", { params });
       setBillings(res.data.items);
       setTotal(res.data.total);
     } catch {}
   }, []);
 
   useEffect(() => {
-    fetchBillings(page);
-  }, [page, fetchBillings]);
+    fetchBillings(page, date);
+  }, [page, date, fetchBillings]);
 
   return (
     <div className="bg-white rounded-none border border-gray-200 shadow-sm flex flex-col">
