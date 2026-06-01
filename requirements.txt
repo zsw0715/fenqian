@@ -6,3 +6,5 @@ asyncio
 uvicorn
 sqlalchemy[asyncio]
 asyncmy
+PyJWT
+bcrypt

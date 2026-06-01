@@ -3,9 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from server.api.router.auth import router as auth_router
 from server.store.config import settings
 from server.store.database import init_db, close_db
-import server.store.schema  # noqa: F401  确保所有模型在 init_db 前被注册
+import server.store.schema 
 
 
 @asynccontextmanager
@@ -24,6 +25,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(auth_router)
 
 
 @app.get("/api/health")
