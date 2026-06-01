@@ -103,13 +103,13 @@ export default function StudentBillingPage() {
                                     <input
                                         type="number"
                                         placeholder="请输入金额"
-                                        className="w-full px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                                        className="w-full mt-2 px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                                     />
                                 </div>
                                 {/* 午饭/晚饭滑块 */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-700">午饭/晚饭？</label>
-                                    <div className="relative flex bg-gray-100 rounded-lg p-1">
+                                    <div className="relative flex bg-gray-100 rounded-lg p-1 mt-2">
                                         <div
                                             className="absolute top-1 bottom-1 w-1/2 bg-white rounded-md shadow-sm transition-transform duration-300 ease-out"
                                             style={{ transform: `translateX(${selectedMeal * 100}%)` }}

@@ -17,7 +17,6 @@ class Bill(Base):
 
     id: Mapped[str] = mapped_column(CHAR(32), primary_key=True, default=gen_uuid)
     user_id: Mapped[str] = mapped_column(CHAR(32), ForeignKey("users.id"), nullable=False)
-    amount_paid: Mapped[float] = mapped_column(Float, nullable=False, default=0)
     original_amount: Mapped[float] = mapped_column(Float, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
