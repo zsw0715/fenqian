@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, LayoutDashboard, Mars, Plus, Venus } from "lucide-react";
+import { Home, LayoutDashboard, LogOut, Mars, Plus, Venus } from "lucide-react";
+import { clearAuth } from "@/utils/token";
 
 type DateItem = { value: string; label: string };
 
@@ -16,6 +17,11 @@ export default function MentorSidebar({ username, gender, dates }: MentorSidebar
     const pathname = usePathname();
     const segments = pathname.split("/");
     const currentDate = segments.length > 2 ? segments[segments.length - 1] : "";
+
+    const handleLogout = () => {
+        clearAuth();
+        window.location.replace("/");
+    };
 
     return (
         <aside className="w-64 h-screen bg-white border-r border-gray-200 flex flex-col">
@@ -81,20 +87,29 @@ export default function MentorSidebar({ username, gender, dates }: MentorSidebar
             </div>
 
             <div className="p-4 border-t border-gray-200">
-                <div className="flex items-center gap-3 px-1 py-1">
-                    <div className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-sm font-semibold">{username ? username.charAt(0) : ""}</span>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 px-1 py-1">
+                        <div className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-sm font-semibold">{username ? username.charAt(0) : ""}</span>
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium text-gray-900 truncate">{username || "加载中..."}</span>
+                            <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                {gender === "male" ? (
+                                    <><Mars size={12} className="text-blue-500" /> 男</>
+                                ) : gender === "female" ? (
+                                    <><Venus size={12} className="text-pink-500" /> 女</>
+                                ) : null}
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-medium text-gray-900 truncate">{username || "加载中..."}</span>
-                        <span className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-                            {gender === "male" ? (
-                                <><Mars size={12} className="text-blue-500" /> 男</>
-                            ) : gender === "female" ? (
-                                <><Venus size={12} className="text-pink-500" /> 女</>
-                            ) : null}
-                        </span>
-                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="退出登录"
+                    >
+                        <LogOut size={16} strokeWidth={2} />
+                    </button>
                 </div>
             </div>
         </aside>

@@ -26,6 +26,7 @@ def _bill_response(bill: Bill) -> BillResponse:
         user_id=bill.user_id,
         original_amount=bill.original_amount,
         discount_amount=bill.discount_amount,
+        already_paid=bill.already_paid,
         dining_type=bill.dining_type,
         created_at=str(bill.created_at),
         updated_at=str(bill.updated_at),
@@ -42,6 +43,7 @@ async def add_bill(
         user_id=current_user.id,
         original_amount=body.original_amount,
         dining_type=body.dining_type,
+        already_paid=body.already_paid,
     )
     db.add(bill)
     await db.commit()
@@ -55,6 +57,7 @@ async def recent_billings(
     page_size: int = 10,
     date: str = "",
     dining_type: str = "",
+    sort_by: str = "created_at_desc",
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -74,6 +77,11 @@ async def recent_billings(
     if dining_type:
         conditions.append(Bill.dining_type == dining_type)
 
+    if sort_by == "name_asc":
+        order = User.username.asc()
+    else:
+        order = Bill.created_at.desc()
+
     base = (
         select(Bill)
         .join(User, Bill.user_id == User.id)
@@ -92,11 +100,12 @@ async def recent_billings(
             Bill.dining_type,
             Bill.original_amount,
             Bill.discount_amount,
+            Bill.already_paid,
             Bill.created_at,
         )
         .join(User, Bill.user_id == User.id)
         .where(*conditions)
-        .order_by(desc(Bill.created_at))
+        .order_by(order)
         .offset(page * page_size)
         .limit(page_size)
     )
@@ -112,7 +121,8 @@ async def recent_billings(
                 dining_type=r[2],
                 original_amount=r[3],
                 discount_amount=r[4],
-                created_at=r[5].strftime("%Y-%m-%d %H:%M:%S"),
+                already_paid=r[5],
+                created_at=r[6].strftime("%Y-%m-%d %H:%M:%S"),
             )
             for r in rows
         ],
@@ -165,6 +175,7 @@ async def export_all(
             Bill.dining_type,
             Bill.original_amount,
             Bill.discount_amount,
+            Bill.already_paid,
             Bill.created_at,
         )
         .join(User, Bill.user_id == User.id)
@@ -180,7 +191,8 @@ async def export_all(
                 "dining_type": r[2],
                 "original_amount": r[3],
                 "discount_amount": r[4],
-                "created_at": r[5].strftime("%Y-%m-%d %H:%M:%S"),
+                "already_paid": r[5],
+                "created_at": r[6].strftime("%Y-%m-%d %H:%M:%S"),
             }
             for r in rows
         ]
@@ -235,6 +247,7 @@ async def edit_bill(
 
     bill.original_amount = body.original_amount
     bill.dining_type = body.dining_type
+    bill.already_paid = body.already_paid
     await db.commit()
     await db.refresh(bill)
 

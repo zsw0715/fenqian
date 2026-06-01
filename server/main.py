@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from server.api.router.auth import router as auth_router
-from server.api.billing.billing import router as billing_router
+from server.api.router.billing import router as billing_router
 from server.store.config import settings
 from server.store.database import init_db, close_db
 import server.store.schema 

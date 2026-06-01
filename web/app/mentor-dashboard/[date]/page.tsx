@@ -53,16 +53,16 @@ export default function MentorDateDetailPage() {
             const res = await api.get("/api/billing/recent", {
                 params: { page: 0, page_size: 1000, date },
             });
-            const items = res.data.items as { student_name: string; dining_type: string; original_amount: number; discount_amount: number; created_at: string }[];
+            const items = res.data.items as { student_name: string; dining_type: string; original_amount: number; discount_amount: number; already_paid: boolean; created_at: string }[];
             if (items.length === 0) {
                 toast.error("暂无数据可导出");
                 return;
             }
-            const header = "学生,餐次,原价,优惠,实付,日期";
+            const header = "学生,餐次,原价,优惠,实付,已付款,日期";
             const rows = items.map((b) => {
                 const meal = b.dining_type === "lunch" ? "午饭" : "晚饭";
                 const final = (b.original_amount - b.discount_amount).toFixed(2);
-                return `${b.student_name},${meal},${b.original_amount},${b.discount_amount},${final},${b.created_at}`;
+                return `${b.student_name},${meal},${b.original_amount},${b.discount_amount},${final},${b.already_paid ? "是" : "否"},${b.created_at}`;
             });
             const csv = "\uFEFF" + header + "\n" + rows.join("\n");
             const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });

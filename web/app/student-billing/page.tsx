@@ -1,38 +1,20 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Download, Mars, Venus } from "lucide-react";
+import { Download, LogOut, Mars, Venus } from "lucide-react";
 import api from "@/utils/api";
+import { clearAuth } from "@/utils/token";
 
 const tabs = ["记账", "等付款", "历史记录"];
 const mealOptions = ["午饭", "晚饭"];
-
-const pendingPayments = [
-    { id: 1, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 2, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 3, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 4, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 5, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 6, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 7, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 8, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 9, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 10, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 11, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 12, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 13, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 14, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 15, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-    { id: 16, title: "Python 进阶课程", date: "2026-05-28", tag: "午饭", amount: 1200 },
-    { id: 17, title: "React 项目辅导", date: "2026-05-27", tag: "晚饭", amount: 800 },
-    { id: 18, title: "算法刷题陪练", date: "2026-05-26", tag: "午饭", amount: 500 },
-];
 
 type BillRecord = {
     id: string;
     dining_type: string;
     original_amount: number;
     discount_amount: number;
+    already_paid: boolean;
     created_at: string;
 };
 
@@ -55,19 +37,8 @@ function groupByDate(bills: BillRecord[]): { label: string; items: BillRecord[] 
     return groups;
 }
 
-function BillingItem({ title, date, tag, amount, isLast }: { title: string; date: string; tag: string; amount: number; isLast?: boolean; }) {
-    return (
-        <div className={`flex items-center justify-between py-3 ${isLast ? "" : "border-b border-gray-100"}`}>
-            <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium text-gray-900">{title}</span>
-                <span className="text-xs text-gray-400">{date} · {tag}</span>
-            </div>
-            <span className="text-sm font-mono font-semibold text-gray-900"> ¥{amount.toLocaleString()}.00 </span>
-        </div>
-    );
-}
-
 export default function StudentBillingPage() {
+    const router = useRouter();
     const [selectedMeal, setSelectedMeal] = useState(0);
     const [activeTab, setActiveTab] = useState(0);
     const [amount, setAmount] = useState("");
@@ -137,7 +108,7 @@ export default function StudentBillingPage() {
 
         const weekdayLabels = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
         const sortedWeeks = Array.from(weeks.entries()).sort(([a], [b]) => a.localeCompare(b));
-        const header = "餐次,原价,优惠,实付,时间";
+        const header = "餐次,原价,优惠,实付,已付款,时间";
         const sections: string[] = [];
 
         for (const [key, weekItems] of sortedWeeks) {
@@ -151,7 +122,7 @@ export default function StudentBillingPage() {
             for (const b of weekItems) {
                 const meal = b.dining_type === "lunch" ? "午饭" : "晚饭";
                 const final = (b.original_amount - b.discount_amount).toFixed(2);
-                sections.push(`${meal},${b.original_amount},${b.discount_amount},${final},${b.created_at}`);
+                sections.push(`${meal},${b.original_amount},${b.discount_amount},${final},${b.already_paid ? "是" : "否"},${b.created_at}`);
             }
             sections.push("");
         }
@@ -172,21 +143,30 @@ export default function StudentBillingPage() {
             <div className="w-full max-w-md max-h-[calc(100vh-128px)] flex-1 flex flex-col">
 
                 {/* Top: User Block */}
-                <div className="flex items-center gap-4 mb-6">
-                    <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center">
-                        <span className="text-white text-xl font-semibold">{username ? username.charAt(0) : ""}</span>
+                <div className="flex items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center">
+                            <span className="text-white text-xl font-semibold">{username ? username.charAt(0) : ""}</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-base font-semibold text-gray-900">{username || "加载中..."}</span>
+                            <span className="text-sm text-gray-500 flex items-center gap-1">
+                                {gender === "male" ? (
+                                    <><Mars size={14} className="text-blue-500" /> 男</>
+                                ) : gender === "female" ? (
+                                    <><Venus size={14} className="text-pink-500" /> 女</>
+                                ) : null}
+                            </span>
+                            <span className="text-xs text-gray-400">{today}</span>
+                        </div>
                     </div>
-                    <div className="flex flex-col gap-0.5">
-                        <span className="text-base font-semibold text-gray-900">{username || "加载中..."}</span>
-                        <span className="text-sm text-gray-500 flex items-center gap-1">
-                            {gender === "male" ? (
-                                <><Mars size={14} className="text-blue-500" /> 男</>
-                            ) : gender === "female" ? (
-                                <><Venus size={14} className="text-pink-500" /> 女</>
-                            ) : null}
-                        </span>
-                        <span className="text-xs text-gray-400">{today}</span>
-                    </div>
+                    <button
+                        onClick={() => { clearAuth(); router.replace("/"); }}
+                        className="p-2.5 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="退出登录"
+                    >
+                        <LogOut size={18} strokeWidth={2} />
+                    </button>
                 </div>
 
                 {/* Middle: Content Area with horizontal slide */}
@@ -218,7 +198,7 @@ export default function StudentBillingPage() {
                                     <div className="relative flex bg-gray-100 rounded-lg p-1 mt-2">
                                         <div
                                             className="absolute top-1 bottom-1 w-1/2 bg-white rounded-md shadow-sm transition-transform duration-300 ease-out"
-                                            style={{ transform: `translateX(${selectedMeal * 100}%)` }}
+                                            style={{ transform: `translateX(${selectedMeal * 95}%)` }}
                                         />
                                         {mealOptions.map((option, index) => (
                                             <button
@@ -244,20 +224,40 @@ export default function StudentBillingPage() {
                         </div>
 
                         {/* Tab 2: 等付款 */}
-                        {/* 修复关键点：添加 overflow-y-auto */}
-                        {/* Tab 2: 等付款 */}
-                        <div className="w-full flex-shrink-0 max-h-[calc(100vh-128px)] overflow-y-auto px-1  ">
+                        <div className="w-full flex-shrink-0 max-h-[calc(100vh-128px)] overflow-y-auto px-1">
                             <div className="bg-white border border-gray-200 shadow-sm p-6 w-full space-y-4 mb-82">
-                                {pendingPayments.map((item, index) => (
-                                    <BillingItem
-                                        key={item.id}
-                                        title={item.title}
-                                        date={item.date}
-                                        tag={item.tag}
-                                        amount={item.amount}
-                                        isLast={index === pendingPayments.length - 1}
-                                    />
-                                ))}
+                                {billList.filter((b) => !b.already_paid).length === 0 ? (
+                                    <p className="text-sm text-gray-400 text-center py-6">暂无待付款账单 🎉</p>
+                                ) : (
+                                    <>
+                                        {groupByDate(billList.filter((b) => !b.already_paid)).map((group) => (
+                                            <div key={group.label}>
+                                                <div className="flex items-center gap-3 py-2">
+                                                    <div className="flex-1 h-px bg-gray-100" />
+                                                    <span className="text-xs text-gray-400 whitespace-nowrap">{group.label}</span>
+                                                    <div className="flex-1 h-px bg-gray-100" />
+                                                </div>
+                                                {group.items.map((item, index) => (
+                                                    <div key={item.id} className={`flex items-center justify-between py-3 ${index === group.items.length - 1 ? "" : "border-b border-gray-100"}`}>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <span className="text-sm font-medium text-gray-900">{item.dining_type === "lunch" ? "午饭" : "晚饭"}</span>
+                                                            <span className="text-xs text-gray-400">{item.created_at}</span>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="text-sm font-mono font-semibold text-red-500">¥{(item.original_amount - item.discount_amount).toLocaleString()}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))}
+                                        <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                                            <span className="text-sm font-medium text-gray-500">待付合计</span>
+                                            <span className="text-lg font-mono font-bold text-red-500">
+                                                ¥{billList.filter((b) => !b.already_paid).reduce((sum, b) => sum + b.original_amount - b.discount_amount, 0).toLocaleString()}
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -287,7 +287,12 @@ export default function StudentBillingPage() {
                                             {group.items.map((item, index) => (
                                                 <div key={item.id} className={`flex items-center justify-between py-3 ${index === group.items.length - 1 ? "" : "border-b border-gray-100"}`}>
                                                     <div className="flex flex-col gap-0.5">
-                                                        <span className="text-sm font-medium text-gray-900">{item.dining_type === "lunch" ? "午饭" : "晚饭"}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm font-medium text-gray-900">{item.dining_type === "lunch" ? "午饭" : "晚饭"}</span>
+                                                            {item.already_paid && (
+                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-medium">已付</span>
+                                                            )}
+                                                        </div>
                                                         <span className="text-xs text-gray-400">{item.created_at}</span>
                                                     </div>
                                                     <div className="text-right">

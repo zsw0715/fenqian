@@ -4,11 +4,13 @@ from pydantic import BaseModel, Field
 class BillAddRequest(BaseModel):
     original_amount: float
     dining_type: str = Field(default="lunch", pattern="^(lunch|dinner)$")
+    already_paid: bool = False
 
 
 class BillEditRequest(BaseModel):
     original_amount: float
     dining_type: str = Field(default="lunch", pattern="^(lunch|dinner)$")
+    already_paid: bool = False
 
 
 class BillResponse(BaseModel):
@@ -17,6 +19,7 @@ class BillResponse(BaseModel):
     dining_type: str
     original_amount: float
     discount_amount: float
+    already_paid: bool
     created_at: str
     updated_at: str
 
@@ -27,6 +30,7 @@ class RecentBillingItem(BaseModel):
     dining_type: str
     original_amount: float
     discount_amount: float
+    already_paid: bool
     created_at: str
 
 

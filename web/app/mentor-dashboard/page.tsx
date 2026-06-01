@@ -15,6 +15,7 @@ type ExportItem = {
     dining_type: string;
     original_amount: number;
     discount_amount: number;
+    already_paid: boolean;
     created_at: string;
 };
 
@@ -84,7 +85,7 @@ export default function MentorDashboardPage() {
 
             const sortedWeeks = Array.from(weeks.entries()).sort(([a], [b]) => a.localeCompare(b));
 
-            const header = "学生,餐次,原价,优惠,实付,时间";
+            const header = "学生,餐次,原价,优惠,实付,已付款,时间";
             const sections: string[] = [];
 
             for (const [key, weekItems] of sortedWeeks) {
@@ -95,7 +96,7 @@ export default function MentorDashboardPage() {
                 for (const b of weekItems) {
                     const meal = b.dining_type === "lunch" ? "午饭" : "晚饭";
                     const final = (b.original_amount - b.discount_amount).toFixed(2);
-                    sections.push(`${b.student_name},${meal},${b.original_amount},${b.discount_amount},${final},${b.created_at}`);
+                    sections.push(`${b.student_name},${meal},${b.original_amount},${b.discount_amount},${final},${b.already_paid ? "是" : "否"},${b.created_at}`);
                 }
                 sections.push("");
             }
