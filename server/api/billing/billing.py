@@ -20,6 +20,7 @@ async def add_bill(
     bill = Bill(
         user_id=current_user.id,
         original_amount=body.original_amount,
+        dining_type=body.dining_type,
     )
     db.add(bill)
     await db.commit()
@@ -29,6 +30,7 @@ async def add_bill(
         id=bill.id,
         user_id=bill.user_id,
         original_amount=bill.original_amount,
+        dining_type=bill.dining_type,
         created_at=str(bill.created_at),
         updated_at=str(bill.updated_at),
     )
@@ -81,6 +83,7 @@ async def edit_bill(
         )
 
     bill.original_amount = body.original_amount
+    bill.dining_type = body.dining_type
     await db.commit()
     await db.refresh(bill)
 
@@ -88,6 +91,7 @@ async def edit_bill(
         id=bill.id,
         user_id=bill.user_id,
         original_amount=bill.original_amount,
+        dining_type=bill.dining_type,
         created_at=str(bill.created_at),
         updated_at=str(bill.updated_at),
     )

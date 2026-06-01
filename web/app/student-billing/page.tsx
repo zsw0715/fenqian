@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
+import { toast } from "sonner";
 import { User, Download } from "lucide-react";
+import api from "@/utils/api";
 
 const tabs = ["记账", "等付款", "历史记录"];
 const mealOptions = ["午饭", "晚饭"];
@@ -62,12 +64,34 @@ function BillingItem({ title, date, tag, amount, isLast }: { title: string; date
 export default function StudentBillingPage() {
     const [selectedMeal, setSelectedMeal] = useState(0);
     const [activeTab, setActiveTab] = useState(0);
+    const [amount, setAmount] = useState("");
+    const [submitting, setSubmitting] = useState(false);
     const today = new Date().toLocaleDateString("zh-CN", {
         year: "numeric",
         month: "long",
         day: "numeric",
         weekday: "long",
     });
+
+    const handleSubmit = async () => {
+        if (!amount || Number(amount) <= 0) {
+            toast.error("请输入有效金额");
+            return;
+        }
+        setSubmitting(true);
+        try {
+            await api.post("/api/billing/add", {
+                original_amount: Number(amount),
+                dining_type: selectedMeal === 0 ? "lunch" : "dinner",
+            });
+            toast.success("提交成功");
+            setAmount("");
+        } catch {
+            toast.error("提交失败，请重试");
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center px-4 py-8">
@@ -103,6 +127,8 @@ export default function StudentBillingPage() {
                                     <input
                                         type="number"
                                         placeholder="请输入金额"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
                                         className="w-full mt-2 px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                                     />
                                 </div>
@@ -127,8 +153,12 @@ export default function StudentBillingPage() {
                                     </div>
                                 </div>
                                 {/* 提交按钮 */}
-                                <button className="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
-                                    提交
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={submitting}
+                                    className="w-full py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {submitting ? "提交中..." : "提交"}
                                 </button>
                             </div>
                         </div>
