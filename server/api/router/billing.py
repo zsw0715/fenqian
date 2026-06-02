@@ -287,16 +287,44 @@ async def push_coupon(
         )
 
     eater_count = len(bills)
-    per_person = round(16 / eater_count, 2)
+    total = sum(b.original_amount for b in bills)
 
+    if total <= 40:
+        for b in bills:
+            b.discount_amount = round(b.original_amount * 0.4, 2)
+        total_discount = sum(b.discount_amount for b in bills)
+        await db.commit()
+        return {
+            "detail": "发放成功",
+            "eater_count": eater_count,
+            "per_person_discount": round(total_discount, 2),
+            "dining_type": body.dining_type,
+            "mode": "six_discount",
+        }
+
+    pool = 16.0
+    active = list(bills)
     for b in bills:
-        b.discount_amount = per_person
+        b.discount_amount = 0.0
+
+    while True:
+        per = pool / len(active)
+        capped = [b for b in active if b.original_amount <= per]
+        if not capped:
+            for b in active:
+                b.discount_amount = round(b.discount_amount + per, 2)
+            break
+        for b in capped:
+            b.discount_amount = round(b.original_amount, 2)
+            pool -= b.original_amount
+        active = [b for b in active if b not in capped]
 
     await db.commit()
 
     return {
         "detail": "发放成功",
         "eater_count": eater_count,
-        "per_person_discount": per_person,
+        "per_person_discount": round(16 / eater_count, 2),
         "dining_type": body.dining_type,
+        "mode": "split",
     }

@@ -24,7 +24,9 @@ export default function MentorDateDetailPage() {
     const [eaterCount, setEaterCount] = useState(0);
     const [pushCount, setPushCount] = useState(0);
     const [pushing, setPushing] = useState(false);
+    const [totalAmount, setTotalAmount] = useState(0);
 
+    const isSixDiscount = totalAmount > 0 && totalAmount <= 40;
     const perPersonDiscount = eaterCount > 0
         ? (LUNCH_DISCOUNT / eaterCount).toFixed(2)
         : "0.00";
@@ -33,10 +35,10 @@ export default function MentorDateDetailPage() {
         api.get("/api/auth/me").then((res) => {
             setUsername(res.data.username);
             setGender(res.data.gender);
-        }).catch(() => {});
+        }).catch(() => { });
         api.get("/api/billing/dates").then((res) => {
             setDates(res.data);
-        }).catch(() => {});
+        }).catch(() => { });
     }, []);
 
     useEffect(() => {
@@ -45,7 +47,9 @@ export default function MentorDateDetailPage() {
             params: { page: 0, page_size: 1000, date, dining_type: mealType },
         }).then((res) => {
             setEaterCount(res.data.total);
-        }).catch(() => {});
+            const items = res.data.items as { original_amount: number }[];
+            setTotalAmount(items.reduce((s, i) => s + i.original_amount, 0));
+        }).catch(() => { });
     }, [date, mealType, pushCount]);
 
     const handleExport = async () => {
@@ -85,8 +89,12 @@ export default function MentorDateDetailPage() {
                 date,
                 dining_type: mealType,
             });
-            const { eater_count, per_person_discount } = res.data;
-            toast.success(`发放成功！${eater_count} 人，每人优惠 ¥${per_person_discount}`);
+            const { eater_count, per_person_discount, mode } = res.data;
+            if (mode === "six_discount") {
+                toast.success(`发放成功！${eater_count} 人，总优惠 ¥${per_person_discount}（每人六折）`);
+            } else {
+                toast.success(`发放成功！${eater_count} 人，每人优惠约 ¥${per_person_discount}`);
+            }
             setPushCount((c) => c + 1);
             setEaterCount(eater_count);
 
@@ -157,7 +165,12 @@ export default function MentorDateDetailPage() {
 
                             <span className={`text-xs border rounded px-2 py-1 flex items-center gap-1 ${mealType === "lunch" ? "text-orange-600 bg-orange-50 border-orange-200" : "text-indigo-600 bg-indigo-50 border-indigo-200"}`}>
                                 <Gift size={11} />
-                                ¥{LUNCH_DISCOUNT} off
+                                {!isSixDiscount ? (
+                                    <span>¥{LUNCH_DISCOUNT} off</span>
+
+                                ) : (
+                                    <span>六折 off</span>
+                                )}
                             </span>
 
                             <div className="flex-1" />
@@ -169,14 +182,21 @@ export default function MentorDateDetailPage() {
                                 </div>
                                 <div className="w-px h-4 bg-gray-200" />
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-400 uppercase tracking-wider">每人应付</span>
-                                    <span className="text-base font-semibold text-gray-300 font-mono">--</span>
+                                    <span className="text-xs text-gray-400 uppercase tracking-wider">总价</span>
+                                    <span className="text-base font-semibold text-gray-900 font-mono">¥{totalAmount.toFixed(2)}</span>
                                 </div>
                                 <div className="w-px h-4 bg-gray-200" />
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-400 uppercase tracking-wider">每人优惠</span>
-                                    <span className="text-base font-semibold text-orange-600 font-mono">¥{perPersonDiscount}</span>
-                                </div>
+                                {isSixDiscount ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-gray-400 uppercase tracking-wider">每人优惠</span>
+                                        <span className="text-base font-semibold text-orange-600 font-mono">六折</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs text-gray-400 uppercase tracking-wider">每人优惠</span>
+                                        <span className="text-base font-semibold text-orange-600 font-mono">¥{perPersonDiscount}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -189,11 +209,10 @@ export default function MentorDateDetailPage() {
                         <button
                             onClick={handlePush}
                             disabled={pushing}
-                            className={`w-full py-4 text-white text-base font-bold rounded-lg hover:scale-[1.01] active:scale-[0.98] transition-all duration-300 hover:animate-pulse flex items-center justify-center gap-2.5 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:animate-none ${
-                                mealType === "lunch"
+                            className={`w-full py-4 text-white text-base font-bold rounded-lg hover:scale-[1.01] active:scale-[0.98] transition-all duration-300 hover:animate-pulse flex items-center justify-center gap-2.5 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:animate-none ${mealType === "lunch"
                                     ? "bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 shadow-orange-500/25 hover:shadow-orange-500/40"
                                     : "bg-gradient-to-r from-violet-600 via-indigo-500 to-blue-500 shadow-indigo-500/25 hover:shadow-indigo-500/40"
-                            }`}
+                                }`}
                         >
                             <Gift size={20} />
                             {pushing ? "发放中..." : "Coupon Push!"}

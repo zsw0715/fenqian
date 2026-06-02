@@ -120,11 +120,11 @@ export default function RecentBillings({ date, onExport }: { date?: string; onEx
             <span className="text-sm text-right">
               {b.discount_amount > 0 ? (
                 <div className="flex flex-col items-end">
-                  <span className="text-xs text-gray-400 line-through font-mono">¥{b.original_amount.toLocaleString()}.00</span>
-                  <span className="text-sm font-mono font-semibold text-orange-600">¥{(b.original_amount - b.discount_amount).toLocaleString()}.00</span>
+                  <span className="text-xs text-gray-400 line-through font-mono">¥{b.original_amount.toFixed(2)}</span>
+                  <span className="text-sm font-mono font-semibold text-orange-600">¥{(b.original_amount - b.discount_amount).toFixed(2)}</span>
                 </div>
               ) : (
-                <span className="text-sm font-mono font-semibold text-gray-900">¥{b.original_amount.toLocaleString()}.00</span>
+                <span className="text-sm font-mono font-semibold text-gray-900">¥{b.original_amount.toFixed(2)}</span>
               )}
             </span>
             <span className="flex justify-center">

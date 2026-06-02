@@ -6,6 +6,7 @@ import {
     clearAuth,
 } from "./token";
 
+// const API_BASE = "http://47.95.118.37:8000";
 const API_BASE = "http://localhost:8000";
 
 const WHITELIST = [
