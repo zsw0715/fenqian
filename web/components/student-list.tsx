@@ -44,21 +44,21 @@ function StudentColumn({
 }) {
   return (
     <div className="flex-1 min-w-0">
-      <div className="grid grid-cols-[40px_1fr_1fr_80px] px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+      <div className="grid grid-cols-[32px_1fr_60px] md:grid-cols-[40px_1fr_1fr_80px] px-3 md:px-4 py-2.5 bg-gray-50 border-b border-gray-100">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">#</span>
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</span>
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Gender</span>
+        <span className="hidden md:block text-xs font-semibold text-gray-500 uppercase tracking-wider">Gender</span>
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Edit</span>
       </div>
       <ul className="divide-y divide-gray-100">
         {data.map((student, idx) => (
           <li
             key={student.id}
-            className="group grid grid-cols-[40px_1fr_1fr_80px] items-center px-4 py-3 hover:bg-gray-50 transition-colors"
+            className="group grid grid-cols-[32px_1fr_60px] md:grid-cols-[40px_1fr_1fr_80px] items-center px-3 md:px-4 py-3 hover:bg-gray-50 transition-colors"
           >
             <span className="text-sm text-gray-400 font-mono">{globalIndex + idx + 1}</span>
             <span className="text-sm font-medium text-gray-900 truncate pr-4">{student.name}</span>
-            <span className="text-sm text-gray-500 truncate pr-4 flex items-center gap-1">
+            <span className="hidden md:flex text-sm text-gray-500 truncate pr-4 items-center gap-1">
               {student.gender === "male" ? (
                 <><Mars size={12} className="text-blue-500" /> 男</>
               ) : (
@@ -68,13 +68,13 @@ function StudentColumn({
             <div className="flex justify-end gap-0.5">
               <button
                 onClick={() => onEdit(student)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded"
+                className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded"
               >
                 <Pencil size={14} strokeWidth={2} />
               </button>
               <button
                 onClick={() => onDelete(student)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
               >
                 <Trash2 size={14} strokeWidth={2} />
               </button>
@@ -83,8 +83,7 @@ function StudentColumn({
         ))}
         {data.length < COL_SIZE &&
           Array.from({ length: COL_SIZE - data.length }).map((_, i) => (
-            <li key={`empty-${i}`} className="grid grid-cols-[40px_1fr_1fr_80px] h-[47px] items-center px-4 py-3">
-              <span className="text-sm text-white"></span>
+            <li key={`empty-${i}`} className="grid grid-cols-[32px_1fr_60px] md:grid-cols-[40px_1fr_1fr_80px] h-[47px] items-center px-3 md:px-4 py-3">
               <span className="text-sm text-white"></span>
               <span className="text-sm text-white"></span>
               <span />
@@ -300,7 +299,7 @@ export default function StudentList() {
           </div>
         </div>
 
-        <div className="flex divide-x divide-gray-100">
+        <div className="flex flex-col md:flex-row md:divide-x md:divide-gray-100">
           <StudentColumn data={left} globalIndex={page * PAGE_SIZE} onDelete={setDeleteTarget} onEdit={openEdit} />
           <StudentColumn data={right} globalIndex={page * PAGE_SIZE + COL_SIZE} onDelete={setDeleteTarget} onEdit={openEdit} />
         </div>

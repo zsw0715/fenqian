@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download } from "lucide-react";
+import { Download, Menu, X } from "lucide-react";
 import { toast } from "sonner";
 import MentorSidebar from "@/components/mentor-sidebar";
 import StudentList from "@/components/student-list";
@@ -53,6 +53,7 @@ export default function MentorDashboardPage() {
     const [gender, setGender] = useState("");
     const [dates, setDates] = useState<DateItem[]>([]);
     const [exporting, setExporting] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         api.get("/api/auth/me").then((res) => {
@@ -119,22 +120,58 @@ export default function MentorDashboardPage() {
 
     return (
         <div className="flex h-screen bg-gray-50">
-            <MentorSidebar username={username} gender={gender} dates={dates} />
+            {/* Desktop sidebar */}
+            <div className="hidden md:flex">
+                <MentorSidebar username={username} gender={gender} dates={dates} />
+            </div>
 
-            <main className="flex-1 flex flex-col p-8 overflow-hidden">
-                <div className="flex items-center justify-between mb-8 flex-shrink-0">
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            {/* Mobile drawer overlay */}
+            {sidebarOpen && (
+                <div className="fixed inset-0 z-50 md:hidden">
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                    <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-200">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-100 flex-shrink-0">
+                            <span className="text-sm font-semibold text-gray-700">导航</span>
+                            <button
+                                onClick={() => setSidebarOpen(false)}
+                                className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            <MentorSidebar username={username} gender={gender} dates={dates} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <main className="flex-1 flex flex-col p-4 md:p-8 overflow-y-auto md:overflow-hidden">
+                <div className="flex items-center justify-between mb-6 md:mb-8 flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className="md:hidden p-2 -ml-2 rounded-lg hover:bg-gray-200 text-gray-600"
+                        >
+                            <Menu size={20} />
+                        </button>
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Dashboard</h1>
+                    </div>
                     <button
                         onClick={handleExportAll}
                         disabled={exporting}
-                        className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <Download size={16} />
-                        {exporting ? "导出中..." : "导出全部 CSV"}
+                        <Download size={14} className="md:w-4 md:h-4" />
+                        <span className="hidden sm:inline">{exporting ? "导出中..." : "导出全部 CSV"}</span>
+                        <span className="sm:hidden">导出</span>
                     </button>
                 </div>
 
-                <div className="flex flex-col gap-6 flex-1 min-h-0">
+                <div className="flex flex-col gap-4 md:gap-6 flex-1 min-h-0">
                     <div className="flex-shrink-0">
                         <StudentList />
                     </div>

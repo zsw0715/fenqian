@@ -94,7 +94,8 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
         )}
       </div>
 
-      <div className="grid grid-cols-[1fr_80px_170px_100px_60px] px-6 py-2.5 bg-gray-50 border-b border-gray-100">
+      {/* Table header — hidden on mobile */}
+      <div className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px] px-6 py-2.5 bg-gray-50 border-b border-gray-100">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</span>
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Meal</span>
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</span>
@@ -106,45 +107,86 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
         {billings.map((b) => (
           <li
             key={b.id}
-            className="group grid grid-cols-[1fr_80px_170px_100px_60px] items-center px-6 py-4 hover:bg-gray-50 transition-colors"
+            className="group px-4 md:px-6 py-3 md:py-4 hover:bg-gray-50 transition-colors"
           >
-            <span className="text-sm font-medium text-gray-900 truncate pr-4">{b.student_name}</span>
-            <span className="text-sm text-gray-500 flex items-center gap-1.5">
-              {b.dining_type === "lunch" ? (
-                <><Utensils size={13} className="text-orange-500" /> 午饭</>
-              ) : (
-                <><Moon size={13} className="text-indigo-500" /> 晚饭</>
-              )}
-            </span>
-            <span className="text-sm text-gray-500 font-mono text-xs">{b.created_at}</span>
-            <span className="text-sm text-right">
-              {b.discount_amount > 0 ? (
-                <div className="flex flex-col items-end">
-                  <span className="text-xs text-gray-400 line-through font-mono">¥{b.original_amount.toFixed(2)}</span>
-                  <span className="text-sm font-mono font-semibold text-orange-600">¥{(b.original_amount - b.discount_amount).toFixed(2)}</span>
-                </div>
-              ) : (
-                <span className="text-sm font-mono font-semibold text-gray-900">¥{b.original_amount.toFixed(2)}</span>
-              )}
-            </span>
-            <span className="flex justify-center">
-              <button
-                onClick={() => togglePaid(b)}
-                className="cursor-pointer p-1 rounded hover:bg-gray-100 transition-colors"
-                title={b.already_paid ? "点击标记为未付" : "点击标记为已付"}
-              >
-                {b.already_paid ? (
-                  <Check size={16} className="text-green-500" strokeWidth={3} />
+            {/* Desktop: 5-column grid */}
+            <div className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px] items-center">
+              <span className="text-sm font-medium text-gray-900 truncate pr-4">{b.student_name}</span>
+              <span className="text-sm text-gray-500 flex items-center gap-1.5">
+                {b.dining_type === "lunch" ? (
+                  <><Utensils size={13} className="text-orange-500" /> 午饭</>
                 ) : (
-                  <span className="text-xs text-gray-300 group-hover:text-gray-500">—</span>
+                  <><Moon size={13} className="text-indigo-500" /> 晚饭</>
                 )}
-              </button>
-            </span>
+              </span>
+              <span className="text-sm text-gray-500 font-mono text-xs">{b.created_at}</span>
+              <span className="text-sm text-right">
+                {b.discount_amount > 0 ? (
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs text-gray-400 line-through font-mono">¥{b.original_amount.toFixed(2)}</span>
+                    <span className="text-sm font-mono font-semibold text-orange-600">¥{(b.original_amount - b.discount_amount).toFixed(2)}</span>
+                  </div>
+                ) : (
+                  <span className="text-sm font-mono font-semibold text-gray-900">¥{b.original_amount.toFixed(2)}</span>
+                )}
+              </span>
+              <span className="flex justify-center">
+                <button
+                  onClick={() => togglePaid(b)}
+                  className="cursor-pointer p-1 rounded hover:bg-gray-100 transition-colors"
+                  title={b.already_paid ? "点击标记为未付" : "点击标记为已付"}
+                >
+                  {b.already_paid ? (
+                    <Check size={16} className="text-green-500" strokeWidth={3} />
+                  ) : (
+                    <span className="text-xs text-gray-300 group-hover:text-gray-500">—</span>
+                  )}
+                </button>
+              </span>
+            </div>
+
+            {/* Mobile: card layout */}
+            <div className="flex md:hidden items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-900 truncate">{b.student_name}</span>
+                  {b.dining_type === "lunch" ? (
+                    <Utensils size={12} className="text-orange-500 flex-shrink-0" />
+                  ) : (
+                    <Moon size={12} className="text-indigo-500 flex-shrink-0" />
+                  )}
+                </div>
+                <span className="text-xs text-gray-400 font-mono">{b.created_at}</span>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="text-right">
+                  {b.discount_amount > 0 ? (
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs text-gray-400 line-through font-mono">¥{b.original_amount.toFixed(2)}</span>
+                      <span className="text-sm font-mono font-semibold text-orange-600">¥{(b.original_amount - b.discount_amount).toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-mono font-semibold text-gray-900">¥{b.original_amount.toFixed(2)}</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => togglePaid(b)}
+                  className="cursor-pointer p-1.5 rounded hover:bg-gray-100 transition-colors"
+                  title={b.already_paid ? "点击标记为未付" : "点击标记为已付"}
+                >
+                  {b.already_paid ? (
+                    <Check size={18} className="text-green-500" strokeWidth={3} />
+                  ) : (
+                    <span className="text-xs text-gray-300 group-hover:text-gray-500">—</span>
+                  )}
+                </button>
+              </div>
+            </div>
           </li>
         ))}
         {billings.length < PAGE_SIZE &&
           Array.from({ length: PAGE_SIZE - billings.length }).map((_, i) => (
-            <li key={`empty-${i}`} className="grid grid-cols-[1fr_80px_170px_100px_60px] items-center px-6 py-4">
+            <li key={`empty-${i}`} className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px] items-center px-6 py-4">
               <span className="text-sm text-white">placeholder</span>
               <span className="text-sm text-white">placeholder</span>
               <span className="text-sm text-white">placeholder</span>
