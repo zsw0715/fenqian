@@ -17,7 +17,7 @@ type BillingItem = {
   created_at: string;
 };
 
-export default function RecentBillings({ date, onExport }: { date?: string; onExport?: () => void }) {
+export default function RecentBillings({ date, mealType, onExport }: { date?: string; mealType?: string; onExport?: () => void }) {
   const [billings, setBillings] = useState<BillingItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -25,17 +25,17 @@ export default function RecentBillings({ date, onExport }: { date?: string; onEx
 
   const fetchBillings = useCallback(async (p: number, d?: string) => {
     try {
-      const params: Record<string, string | number> = { page: p, page_size: PAGE_SIZE };
+      const params: Record<string, string | number> = { page: p, page_size: PAGE_SIZE, dining_type: mealType || "" };
       if (d) { params.date = d; params.sort_by = "name_asc"; }
       const res = await api.get("/api/billing/recent", { params });
       setBillings(res.data.items);
       setTotal(res.data.total);
     } catch {}
-  }, []);
+  }, [mealType]);
 
   useEffect(() => {
     fetchBillings(page, date);
-  }, [page, date, fetchBillings]);
+  }, [page, date, fetchBillings, mealType]);
 
   const togglePaid = async (b: BillingItem) => {
     const newPaid = !b.already_paid;

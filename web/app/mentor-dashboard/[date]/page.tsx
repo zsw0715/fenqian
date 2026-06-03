@@ -135,7 +135,7 @@ export default function MentorDateDetailPage() {
 
                 <div className="flex flex-col gap-6 flex-1 min-h-0">
                     <div className="flex-shrink-0">
-                        <RecentBillings date={date} key={pushCount} onExport={handleExport} />
+                        <RecentBillings date={date} key={pushCount} mealType={mealType} onExport={handleExport} />
                     </div>
 
                     <div className="bg-white border border-gray-200 shadow-sm flex-shrink-0">

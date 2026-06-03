@@ -186,10 +186,10 @@ async def update_student(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if current_user.user_identity != "mentor":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="仅管理员可操作")
+    # if current_user.user_identity != "mentor":
+    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="仅管理员可操作")
 
-    result = await db.execute(select(User).where(User.id == body.student_id, User.user_identity == "student"))
+    result = await db.execute(select(User).where(User.id == body.student_id))
     student = result.scalar_one_or_none()
     if not student:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="学生不存在")
