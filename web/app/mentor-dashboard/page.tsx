@@ -56,11 +56,11 @@ export default function MentorDashboardPage() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
-        api.get("/api/fenqian/auth/me").then((res) => {
+        api.get("/api/auth/me").then((res) => {
             setUsername(res.data.username);
             setGender(res.data.gender);
         }).catch(() => { });
-        api.get("/api/fenqian/billing/dates").then((res) => {
+        api.get("/api/billing/dates").then((res) => {
             setDates(res.data);
         }).catch(() => { });
     }, []);
@@ -68,7 +68,7 @@ export default function MentorDashboardPage() {
     const handleExportAll = async () => {
         setExporting(true);
         try {
-            const res = await api.get("/api/fenqian/billing/export_all");
+            const res = await api.get("/api/billing/export_all");
             const items: ExportItem[] = res.data.items;
             if (items.length === 0) {
                 toast.error("暂无数据可导出");

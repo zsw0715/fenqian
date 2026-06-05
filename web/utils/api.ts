@@ -7,13 +7,13 @@ import {
 } from "./token";
 
 // const API_BASE = "http://47.95.118.37:8000";
-const API_BASE = "http://localhost:8080/";
+const API_BASE = "http://localhost:8000/";
 
 const WHITELIST = [
-    "/api/fenqian/auth/login",
-    "/api/fenqian/auth/register",
-    "/api/fenqian/auth/refresh",
-    "/api/fenqian/health",
+    "/api/auth/login",
+    "/api/auth/register",
+    "/api/auth/refresh",
+    "/api/health",
 ];
 
 const api = axios.create({
@@ -42,7 +42,7 @@ api.interceptors.response.use(
             const refreshToken = getRefreshToken();
             if (refreshToken) {
                 try {
-                    const res = await axios.post(`${API_BASE}/api/fenqian/auth/refresh`, {
+                    const res = await axios.post(`${API_BASE}/api/auth/refresh`, {
                         refresh_token: refreshToken,
                     });
                     setAccessToken(res.data.access_token);

@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from server.api.router.auth import router as auth_router
 from server.api.router.billing import router as billing_router
+from server.api.router.sync import router as sync_router
 from server.store.config import settings
 from server.store.database import init_db, close_db
 import server.store.schema 
@@ -30,6 +31,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(billing_router)
+app.include_router(sync_router)
 
 
 @app.get("/api/health")

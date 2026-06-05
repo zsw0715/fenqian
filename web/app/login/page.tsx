@@ -20,7 +20,7 @@ export default function LoginPage() {
         setLoading(true);
         setError("");
         try {
-            const res = await api.post("/api/fenqian/auth/login", {
+            const res = await api.post("/api/auth/login", {
                 username: name,
                 password,
             });

@@ -33,18 +33,18 @@ export default function MentorDateDetailPage() {
         : "0.00";
 
     useEffect(() => {
-        api.get("/api/fenqian/auth/me").then((res) => {
+        api.get("/api/auth/me").then((res) => {
             setUsername(res.data.username);
             setGender(res.data.gender);
         }).catch(() => { });
-        api.get("/api/fenqian/billing/dates").then((res) => {
+        api.get("/api/billing/dates").then((res) => {
             setDates(res.data);
         }).catch(() => { });
     }, []);
 
     useEffect(() => {
         if (!date) return;
-        api.get("/api/fenqian/billing/recent", {
+        api.get("/api/billing/recent", {
             params: { page: 0, page_size: 1000, date, dining_type: mealType },
         }).then((res) => {
             setEaterCount(res.data.total);
@@ -55,7 +55,7 @@ export default function MentorDateDetailPage() {
 
     const handleExport = async () => {
         try {
-            const res = await api.get("/api/fenqian/billing/recent", {
+            const res = await api.get("/api/billing/recent", {
                 params: { page: 0, page_size: 1000, date },
             });
             const items = res.data.items as { student_name: string; dining_type: string; original_amount: number; discount_amount: number; already_paid: boolean; created_at: string }[];
@@ -86,7 +86,7 @@ export default function MentorDateDetailPage() {
     const handlePush = async () => {
         setPushing(true);
         try {
-            const res = await api.post("/api/fenqian/billing/push_coupon", {
+            const res = await api.post("/api/billing/push_coupon", {
                 date,
                 dining_type: mealType,
             });

@@ -72,12 +72,12 @@ function StudentColumn({
               >
                 <Pencil size={14} strokeWidth={2} />
               </button>
-              <button
+              {/* <button
                 onClick={() => onDelete(student)}
                 className="md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
               >
                 <Trash2 size={14} strokeWidth={2} />
-              </button>
+              </button> */}
             </div>
           </li>
         ))}
@@ -114,7 +114,7 @@ export default function StudentList() {
 
   const fetchStudents = useCallback(async (p: number) => {
     try {
-      const res = await api.get("/api/fenqian/auth/list_all_students", {
+      const res = await api.get("/api/auth/list_all_students", {
         params: { page: p, page_size: PAGE_SIZE },
       });
       setStudents(res.data.items);
@@ -130,7 +130,7 @@ export default function StudentList() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await api.delete(`/api/fenqian/auth/delete_student?student_id=${deleteTarget.id}`);
+    //   await api.delete(`/api/auth/delete_student?student_id=${deleteTarget.id}`);
       toast.success(`已删除 ${deleteTarget.name}`);
       setDeleteTarget(null);
       fetchStudents(page);
@@ -146,7 +146,7 @@ export default function StudentList() {
     if (!newPassword) { toast.error("请输入密码"); return; }
     setAdding(true);
     try {
-      await api.post("/api/fenqian/auth/register", {
+      await api.post("/api/auth/register", {
         username: newName.trim(),
         password: newPassword,
         gender: newGender,
@@ -179,7 +179,7 @@ export default function StudentList() {
     if (!editName.trim()) { toast.error("请输入学生姓名"); return; }
     setEditing(true);
     try {
-      await api.put("/api/fenqian/auth/update_student", {
+      await api.put("/api/auth/update_student", {
         student_id: editTarget.id,
         username: editName.trim() !== editTarget.name ? editName.trim() : undefined,
         gender: editGender !== editTarget.gender ? editGender : undefined,
@@ -226,7 +226,7 @@ export default function StudentList() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Dialog open={addOpen} onOpenChange={setAddOpen}>
+            {/* <Dialog open={addOpen} onOpenChange={setAddOpen}>
               <DialogTrigger asChild>
                 <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors">
                   <Plus size={14} strokeWidth={2} />
@@ -295,7 +295,7 @@ export default function StudentList() {
                   </Button>
                 </DialogFooter>
               </DialogContent>
-            </Dialog>
+            </Dialog> */}
           </div>
         </div>
 
@@ -312,15 +312,15 @@ export default function StudentList() {
             <DialogDescription>修改 {editTarget?.name} 的信息</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-2">
-            <div className="grid gap-1.5">
+            {/* <div className="grid gap-1.5">
               <label className="text-sm font-medium text-foreground">姓名</label>
               <input
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
-            </div>
-            <div className="grid gap-1.5">
+            </div> */}
+            {/* <div className="grid gap-1.5">
               <label className="text-sm font-medium text-foreground">性别</label>
               <div className="flex gap-2">
                 <button
@@ -346,7 +346,7 @@ export default function StudentList() {
                   <Venus size={14} /> 女
                 </button>
               </div>
-            </div>
+            </div> */}
             <div className="grid gap-1.5">
               <label className="text-sm font-medium text-foreground">新密码（留空则不修改）</label>
               <input

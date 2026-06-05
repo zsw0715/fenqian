@@ -22,7 +22,7 @@ export default function Home() {
 
             try {
                 // "http://47.95.118.37:8000/api/auth/refresh”
-                const res = await axios.post("http://localhost:8080/api/fenqian/auth/refresh", {
+                const res = await axios.post("http://localhost:8000/api/auth/refresh", {
                     refresh_token: refreshToken,
                 });
                 if (cancelled) return;
