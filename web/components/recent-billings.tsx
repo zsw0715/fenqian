@@ -24,10 +24,11 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const fetchBillings = useCallback(async (p: number, d?: string) => {
+    console.log("mealType", mealType);
     try {
       const params: Record<string, string | number> = { page: p, page_size: PAGE_SIZE, dining_type: mealType || "" };
       if (d) { params.date = d; params.sort_by = "name_asc"; }
-      const res = await api.get("/api/billing/recent", { params });
+      const res = await api.get("/api/fenqian/billing/recent", { params });
       setBillings(res.data.items);
       setTotal(res.data.total);
     } catch {}
@@ -43,7 +44,7 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
       prev.map((item) => (item.id === b.id ? { ...item, already_paid: newPaid } : item))
     );
     try {
-      await api.put("/api/billing/edit", {
+      await api.put("/api/fenqian/billing/edit", {
         original_amount: b.original_amount,
         dining_type: b.dining_type,
         already_paid: newPaid,

@@ -114,7 +114,7 @@ export default function StudentList() {
 
   const fetchStudents = useCallback(async (p: number) => {
     try {
-      const res = await api.get("/api/auth/list_all_students", {
+      const res = await api.get("/api/fenqian/auth/list_all_students", {
         params: { page: p, page_size: PAGE_SIZE },
       });
       setStudents(res.data.items);
@@ -130,7 +130,7 @@ export default function StudentList() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await api.delete(`/api/auth/delete_student?student_id=${deleteTarget.id}`);
+      await api.delete(`/api/fenqian/auth/delete_student?student_id=${deleteTarget.id}`);
       toast.success(`已删除 ${deleteTarget.name}`);
       setDeleteTarget(null);
       fetchStudents(page);
@@ -146,7 +146,7 @@ export default function StudentList() {
     if (!newPassword) { toast.error("请输入密码"); return; }
     setAdding(true);
     try {
-      await api.post("/api/auth/register", {
+      await api.post("/api/fenqian/auth/register", {
         username: newName.trim(),
         password: newPassword,
         gender: newGender,
@@ -179,7 +179,7 @@ export default function StudentList() {
     if (!editName.trim()) { toast.error("请输入学生姓名"); return; }
     setEditing(true);
     try {
-      await api.put("/api/auth/update_student", {
+      await api.put("/api/fenqian/auth/update_student", {
         student_id: editTarget.id,
         username: editName.trim() !== editTarget.name ? editName.trim() : undefined,
         gender: editGender !== editTarget.gender ? editGender : undefined,

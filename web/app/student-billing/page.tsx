@@ -55,13 +55,13 @@ export default function StudentBillingPage() {
 
     const fetchBills = async () => {
         try {
-            const res = await api.get("/api/billing/list_by_username");
+            const res = await api.get("/api/fenqian/billing/list_by_username");
             setBillList(res.data);
         } catch {}
     };
 
     useEffect(() => {
-        api.get("/api/auth/me").then((res) => {
+        api.get("/api/fenqian/auth/me").then((res) => {
             setUsername(res.data.username);
             setGender(res.data.gender);
         }).catch(() => {});
@@ -75,7 +75,7 @@ export default function StudentBillingPage() {
         }
         setSubmitting(true);
         try {
-            await api.post("/api/billing/add", {
+            await api.post("/api/fenqian/billing/add", {
                 original_amount: Number(amount),
                 dining_type: selectedMeal === 0 ? "lunch" : "dinner",
             });
