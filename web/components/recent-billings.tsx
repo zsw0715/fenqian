@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Moon, Utensils, Download, Pencil } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Moon, Utensils, Download, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/utils/api";
 import {
@@ -93,6 +93,55 @@ function EditDialog({
     );
 }
 
+function DeleteDialog({
+    open,
+    item,
+    onClose,
+    onDeleted,
+}: {
+    open: boolean;
+    item: BillingItem | null;
+    onClose: () => void;
+    onDeleted: () => void;
+}) {
+    const [deleting, setDeleting] = useState(false);
+
+    if (!item) return null;
+
+    const handleDelete = async () => {
+        setDeleting(true);
+        try {
+            await api.delete("/api/billing/delete", { params: { bill_id: item.id } });
+            toast.success("删除成功");
+            onDeleted();
+            onClose();
+        } catch {
+            toast.error("删除失败");
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle>删除账单</DialogTitle>
+                    <DialogDescription>
+                        确定要删除 <span className="font-medium text-foreground">{item.student_name}</span> 的这条账单吗？
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>取消</Button>
+                    <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+                        {deleting ? "删除中..." : "确认删除"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 type BillingItem = {
     id: string;
     student_name: string;
@@ -108,6 +157,7 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(0);
     const [editItem, setEditItem] = useState<BillingItem | null>(null);
+    const [deleteItem, setDeleteItem] = useState<BillingItem | null>(null);
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     const fetchBillings = useCallback(async (p: number, d?: string) => {
@@ -183,13 +233,14 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
             </div>
 
             {/* Table header — hidden on mobile */}
-            <div className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px_40px] px-6 py-2.5 bg-gray-50 border-b border-gray-100">
+            <div className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px_40px_40px] px-6 py-2.5 bg-gray-50 border-b border-gray-100">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Student</span>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Meal</span>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</span>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Amount</span>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Paid</span>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Edit</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Del</span>
             </div>
 
             <ul className="divide-y divide-gray-100">
@@ -199,7 +250,7 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
                         className="group px-4 md:px-6 py-3 md:py-4 hover:bg-gray-50 transition-colors"
                     >
                         {/* Desktop: 5-column grid */}
-                        <div className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px_40px] items-center">
+                        <div className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px_40px_40px] items-center">
                             <span className="text-sm font-medium text-gray-900 truncate pr-4">{b.student_name}</span>
                             <span className="text-sm text-gray-500 flex items-center gap-1.5">
                                 {b.dining_type === "lunch" ? (
@@ -239,6 +290,15 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
                                     title="编辑"
                                 >
                                     <Pencil size={14} className="text-gray-400 hover:text-blue-500" />
+                                </button>
+                            </span>
+                            <span className="flex justify-center">
+                                <button
+                                    onClick={() => setDeleteItem(b)}
+                                    className="cursor-pointer p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition-all"
+                                    title="删除"
+                                >
+                                    <Trash2 size={14} className="text-gray-400 hover:text-red-500" />
                                 </button>
                             </span>
                         </div>
@@ -285,13 +345,21 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
                                 >
                                     <Pencil size={16} className="text-gray-400" />
                                 </button>
+                                <button
+                                    onClick={() => setDeleteItem(b)}
+                                    className="cursor-pointer p-1.5 rounded hover:bg-gray-100 transition-colors"
+                                    title="删除"
+                                >
+                                    <Trash2 size={16} className="text-gray-400" />
+                                </button>
                             </div>
                         </div>
                     </li>
                 ))}
                 {billings.length < PAGE_SIZE &&
                     Array.from({ length: PAGE_SIZE - billings.length }).map((_, i) => (
-                        <li key={`empty-${i}`} className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px_40px] items-center px-6 py-4">
+                        <li key={`empty-${i}`} className="hidden md:grid grid-cols-[1fr_80px_170px_100px_60px_40px_40px] items-center px-6 py-4">
+                            <span className="text-sm text-white">placeholder</span>
                             <span className="text-sm text-white">placeholder</span>
                             <span className="text-sm text-white">placeholder</span>
                             <span className="text-sm text-white">placeholder</span>
@@ -310,6 +378,12 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
                 item={editItem}
                 onClose={() => setEditItem(null)}
                 onSaved={() => fetchBillings(page, date)}
+            />
+            <DeleteDialog
+                open={!!deleteItem}
+                item={deleteItem}
+                onClose={() => setDeleteItem(null)}
+                onDeleted={() => fetchBillings(page, date)}
             />
         </div>
     );
