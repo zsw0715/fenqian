@@ -134,7 +134,7 @@ async def list_students(
     result = await db.execute(
         select(User)
         .where(User.user_identity == "student")
-        .order_by(User.created_at.desc())
+        .order_by(User.created_at.desc(), User.id)
         .offset(page * page_size)
         .limit(page_size)
     )
