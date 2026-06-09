@@ -185,7 +185,7 @@ export default function MentorDateDetailPage() {
                                 <div className="relative flex bg-gray-100 rounded-lg p-0.5 w-40 md:w-44">
                                     <div
                                         className="absolute top-0.5 bottom-0.5 w-1/2 bg-white rounded-md shadow-sm transition-transform duration-300 ease-out"
-                                        style={{ transform: `translateX(${mealType === "lunch" ? 0 : 100}%)` }}
+                                        style={{ transform: `translateX(${mealType === "lunch" ? 0 : 95}%)` }}
                                     />
                                     <button
                                         onClick={() => setMealType("lunch")}

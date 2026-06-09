@@ -1,16 +1,21 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
 class BillAddRequest(BaseModel):
+    student_name: Optional[str] = None
     original_amount: float
     dining_type: str = Field(default="lunch", pattern="^(lunch|dinner)$")
     already_paid: bool = False
+    created_at: Optional[str] = None
 
 
 class BillEditRequest(BaseModel):
     original_amount: float
     dining_type: str = Field(default="lunch", pattern="^(lunch|dinner)$")
     already_paid: bool = False
+    created_at: Optional[str] = None
 
 
 class BillResponse(BaseModel):

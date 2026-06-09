@@ -8,3 +8,4 @@ sqlalchemy[asyncio]
 asyncmy
 PyJWT
 bcrypt
+cryptography

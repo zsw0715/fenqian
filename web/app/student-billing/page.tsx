@@ -42,6 +42,7 @@ export default function StudentBillingPage() {
     const [selectedMeal, setSelectedMeal] = useState(0);
     const [activeTab, setActiveTab] = useState(0);
     const [amount, setAmount] = useState("");
+    const [billingDate, setBillingDate] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [username, setUsername] = useState("");
     const [gender, setGender] = useState("");
@@ -78,6 +79,7 @@ export default function StudentBillingPage() {
             await api.post("/api/billing/add", {
                 original_amount: Number(amount),
                 dining_type: selectedMeal === 0 ? "lunch" : "dinner",
+                created_at: billingDate || undefined,
             });
             toast.success("提交成功");
             setAmount("");
@@ -211,6 +213,24 @@ export default function StudentBillingPage() {
                                             </button>
                                         ))}
                                     </div>
+                                </div>
+                                {/* 日期（可选） */}
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-700">日期（可选）<span className="text-sm text-red-400 font-extrabold ">（如果不是要补记录，就不用选时间！）</span></label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setBillingDate("")}
+                                        className="w-full py-2.5 text-sm font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors"
+                                    >
+                                        default time (current time)
+                                    </button>
+                                    <input
+                                        type="date"
+                                        value={billingDate}
+                                        onChange={(e) => setBillingDate(e.target.value)}
+                                        className="w-full mt-2 px-3 py-2.5 rounded-lg border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                                    />
+                                    <p className="text-xs text-gray-400">如果不是要补记录，就不用选时间！</p>
                                 </div>
                                 {/* 提交按钮 */}
                                 <button

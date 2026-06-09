@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Moon, Utensils, Download, Pencil, Trash2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Moon, Utensils, Download, Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/utils/api";
 import {
@@ -29,10 +29,16 @@ function EditDialog({
     onSaved: () => void;
 }) {
     const [amount, setAmount] = useState("");
+    const [editMeal, setEditMeal] = useState("lunch");
+    const [editDate, setEditDate] = useState("");
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        if (item) setAmount(String(item.original_amount));
+        if (item) {
+            setAmount(String(item.original_amount));
+            setEditMeal(item.dining_type);
+            setEditDate("");
+        }
     }, [item]);
 
     if (!item) return null;
@@ -47,8 +53,9 @@ function EditDialog({
         try {
             await api.put("/api/billing/edit", {
                 original_amount: val,
-                dining_type: item.dining_type,
+                dining_type: editMeal,
                 already_paid: item.already_paid,
+                created_at: editDate || undefined,
             }, {
                 params: { bill_id: item.id },
             });
@@ -71,21 +78,154 @@ function EditDialog({
                         当前原价：<span className="font-mono font-medium text-foreground">¥{item.original_amount.toFixed(2)}</span>
                     </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">新原价</label>
-                    <Input
-                        type="number"
-                        step="0.01"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="输入新原价"
-                        autoFocus
-                    />
+                <div className="grid gap-4 py-2">
+                    <div className="grid gap-1.5">
+                        <label className="text-sm font-medium">新原价</label>
+                        <Input
+                            type="number"
+                            step="0.01"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder="输入新原价"
+                            autoFocus
+                        />
+                    </div>
+                    <div className="grid gap-1.5">
+                        <label className="text-sm font-medium">餐次</label>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setEditMeal("lunch")}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md border text-sm transition-colors ${
+                                    editMeal === "lunch"
+                                        ? "border-orange-500 bg-orange-50 text-orange-700"
+                                        : "border-input bg-transparent text-muted-foreground hover:bg-muted"
+                                }`}
+                            >
+                                <Utensils size={14} /> 午饭
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setEditMeal("dinner")}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md border text-sm transition-colors ${
+                                    editMeal === "dinner"
+                                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                                        : "border-input bg-transparent text-muted-foreground hover:bg-muted"
+                                }`}
+                            >
+                                <Moon size={14} /> 晚饭
+                            </button>
+                        </div>
+                    </div>
+                    <div className="grid gap-1.5">
+                        <label className="text-sm font-medium">日期（留空则不修改）</label>
+                        <Input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} />
+                    </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={onClose}>取消</Button>
                     <Button onClick={handleSave} disabled={saving}>
                         {saving ? "保存中..." : "确认"}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function AddDialog({
+    open,
+    onClose,
+    onAdded,
+}: {
+    open: boolean;
+    onClose: () => void;
+    onAdded: () => void;
+}) {
+    const [name, setName] = useState("");
+    const [amount, setAmount] = useState("");
+    const [dateStr, setDateStr] = useState(new Date().toISOString().slice(0, 10));
+    const [mealType, setMealType] = useState("lunch");
+    const [adding, setAdding] = useState(false);
+
+    const handleAdd = async () => {
+        if (!name.trim()) { toast.error("请输入用户名"); return; }
+        const val = parseFloat(amount);
+        if (isNaN(val) || val <= 0) { toast.error("请输入有效金额"); return; }
+        setAdding(true);
+        try {
+            await api.post("/api/billing/add", {
+                student_name: name.trim(),
+                original_amount: val,
+                dining_type: mealType,
+                created_at: dateStr,
+            });
+            toast.success("已添加");
+            onAdded();
+            onClose();
+            setName("");
+            setAmount("");
+            setDateStr(new Date().toISOString().slice(0, 10));
+            setMealType("lunch");
+        } catch {
+            toast.error("添加失败");
+        } finally {
+            setAdding(false);
+        }
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={(open) => { if (!open) onClose(); }}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader>
+                    <DialogTitle>新增账单</DialogTitle>
+                    <DialogDescription>填写账单信息</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-2">
+                    <div className="grid gap-1.5">
+                        <label className="text-sm font-medium">用户名</label>
+                        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="请输入用户名" />
+                    </div>
+                    <div className="grid gap-1.5">
+                        <label className="text-sm font-medium">原价</label>
+                        <Input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="输入原价" />
+                    </div>
+                    <div className="grid gap-1.5">
+                        <label className="text-sm font-medium">餐次</label>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setMealType("lunch")}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md border text-sm transition-colors ${
+                                    mealType === "lunch"
+                                        ? "border-orange-500 bg-orange-50 text-orange-700"
+                                        : "border-input bg-transparent text-muted-foreground hover:bg-muted"
+                                }`}
+                            >
+                                <Utensils size={14} /> 午饭
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setMealType("dinner")}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md border text-sm transition-colors ${
+                                    mealType === "dinner"
+                                        ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                                        : "border-input bg-transparent text-muted-foreground hover:bg-muted"
+                                }`}
+                            >
+                                <Moon size={14} /> 晚饭
+                            </button>
+                        </div>
+                    </div>
+                    <div className="grid gap-1.5">
+                        <label className="text-sm font-medium">时间</label>
+                        <Input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={onClose}>取消</Button>
+                    <Button onClick={handleAdd} disabled={adding}>
+                        {adding ? "添加中..." : "确认"}
                     </Button>
                 </DialogFooter>
             </DialogContent>
@@ -158,6 +298,7 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
     const [page, setPage] = useState(0);
     const [editItem, setEditItem] = useState<BillingItem | null>(null);
     const [deleteItem, setDeleteItem] = useState<BillingItem | null>(null);
+    const [addOpen, setAddOpen] = useState(false);
     const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
     const fetchBillings = useCallback(async (p: number, d?: string) => {
@@ -221,10 +362,17 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
                         </button>
                     </div>
                 </div>
+                <button
+                    onClick={() => setAddOpen(true)}
+                    className="ml-auto mr-2 flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                    <Plus size={14} />
+                    新增账单
+                </button>
                 {onExport && (
                     <button
                         onClick={onExport}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
                     >
                         <Download size={14} />
                         导出 CSV
@@ -384,6 +532,11 @@ export default function RecentBillings({ date, mealType, onExport }: { date?: st
                 item={deleteItem}
                 onClose={() => setDeleteItem(null)}
                 onDeleted={() => fetchBillings(page, date)}
+            />
+            <AddDialog
+                open={addOpen}
+                onClose={() => setAddOpen(false)}
+                onAdded={() => fetchBillings(page, date)}
             />
         </div>
     );

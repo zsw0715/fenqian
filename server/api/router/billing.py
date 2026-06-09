@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select, desc, func
+from sqlalchemy import select, desc, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from server.api.auth.dependencies import get_current_user
@@ -39,12 +39,47 @@ async def add_bill(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # 如果传了 student_name，按姓名查找学生；否则使用当前用户（学生给自己加账单）
+    if body.student_name:
+        result = await db.execute(
+            select(User).where(
+                and_(
+                    User.username == body.student_name,
+                    User.user_identity == "student",
+                )
+            )
+        )
+        student = result.scalar_one_or_none()
+        if student is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"未找到学生: {body.student_name}",
+            )
+        user_id = student.id
+    else:
+        user_id = current_user.id
+
     bill = Bill(
-        user_id=current_user.id,
+        user_id=user_id,
         original_amount=body.original_amount,
         dining_type=body.dining_type,
         already_paid=body.already_paid,
     )
+
+    # 如果传了 created_at，则覆盖默认时间
+    if body.created_at:
+        try:
+            bill.created_at = datetime.strptime(body.created_at, "%Y-%m-%d").replace(
+                hour=15,
+                minute=15,
+                second=0,
+            )
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="日期格式错误，请使用 YYYY-MM-DD",
+            )
+
     db.add(bill)
     await db.commit()
     await db.refresh(bill)
@@ -248,6 +283,19 @@ async def edit_bill(
     bill.original_amount = body.original_amount
     bill.dining_type = body.dining_type
     bill.already_paid = body.already_paid
+
+    # 如果传了 created_at，则更新日期为当天 15:15
+    if body.created_at:
+        try:
+            bill.created_at = datetime.strptime(body.created_at, "%Y-%m-%d").replace(
+                hour=15, minute=15, second=0,
+            )
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="日期格式错误，请使用 YYYY-MM-DD",
+            )
+
     await db.commit()
     await db.refresh(bill)
 
