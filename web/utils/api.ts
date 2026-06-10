@@ -6,8 +6,8 @@ import {
     clearAuth,
 } from "./token";
 
-// const API_BASE = "http://47.95.118.37:8000";
-const API_BASE = "http://154.219.118.31:7988";
+const API_BASE = "http://47.95.118.37:8000";
+// const API_BASE = "http://154.219.118.31:7988";
 // const API_BASE = "http://localhost:8000";
 
 
